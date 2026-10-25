@@ -218,3 +218,10 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# My db
+database.db
+
+# Agents
+.claude/
+.agents/
