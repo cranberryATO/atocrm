@@ -2,7 +2,12 @@ from fastapi import status
 from fastapi.testclient import TestClient
 
 
-def test_a(client: TestClient):
+def _test_a(client: TestClient):
+    # check non-authenticated access is rejected
+    response = client.get("/parties/")
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json() == []
+
     # check DB is empty
     response = client.get("/parties/")
     assert response.status_code == status.HTTP_200_OK

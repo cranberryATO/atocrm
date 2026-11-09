@@ -3,7 +3,7 @@ from typing import Annotated
 from fastapi import APIRouter, Query, HTTPException, status, Response
 from sqlmodel import select
 
-from ...core.dependencies import SessionDep
+from app.core.database import SessionDep
 
 from .models import Party, PartyUpdate, PartyCreate
 

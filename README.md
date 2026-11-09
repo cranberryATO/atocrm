@@ -13,3 +13,7 @@ Launch tests (from backend/app)
 to launch tests only on a module:
 
     uv run pytest modules/parties/
+
+Coverage tests
+
+    uv run pytest --cov=app --cov-branch --cov-report=term-missing

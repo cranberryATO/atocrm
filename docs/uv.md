@@ -15,7 +15,10 @@ Install FastAPI
 Install dependencies
 
     uv add sqlmodel
-    uv add pytest
+    uv add --dev pytest
+    uv add --dev pytest-cov
+    uv add pyjwt
+    uv add "pwdlib[argon2]"
 
 Test: launch server
 
