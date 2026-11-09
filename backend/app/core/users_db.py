@@ -1,10 +1,15 @@
 from pwdlib import PasswordHash
+from typing import TYPE_CHECKING
 
-from sqlmodel import Field, SQLModel, Session, select
+
+from sqlmodel import Field, Relationship, SQLModel, Session, select
 from fastapi import HTTPException, status
 
 from app.core.database import engine
 from app.core.settings import get_settings
+
+if TYPE_CHECKING:
+    from app.core.organization import Organization
 
 ADMIN_USERNAME = "admin"
 
@@ -20,14 +25,25 @@ def verify_password(plain_password: str, hashed_password: str):
     return password_hash.verify(plain_password, hashed_password)
 
 
+class OrganizationUserLink(SQLModel, table=True):
+    org_id: int | None = Field(
+        default=None, foreign_key="organization.id", primary_key=True
+    )
+    member_id: int | None = Field(default=None, foreign_key="user.id", primary_key=True)
+    is_org_admin: bool = Field(default=False)
+
+
 class UserBase(SQLModel):
     username: str = Field(unique=True, index=True, min_length=3)
 
 
-class UserInDb(UserBase, table=True):
+class User(UserBase, table=True):
     id: int | None = Field(default=None, primary_key=True)
     hashed_password: str
     is_admin: bool = Field(default=False)
+    orgs: list["Organization"] = Relationship(
+        back_populates="members", link_model=OrganizationUserLink
+    )
 
 
 class UserOut(UserBase):
@@ -53,19 +69,19 @@ def create_admin():
             )
 
 
-def get_user_from_db(username: str, session: Session) -> UserInDb | None:
-    return session.exec(select(UserInDb).where(UserInDb.username == username)).first()
+def get_user_from_db(username: str, session: Session) -> User | None:
+    return session.exec(select(User).where(User.username == username)).first()
 
 
 def create_user_in_db(username: str, password: str, session: Session, is_admin: bool):
-    user_in_db = UserInDb(
+    user_in_db = User(
         hashed_password=hash_password(password), username=username, is_admin=is_admin
     )
     session.add(user_in_db)
     session.commit()
 
 
-def authenticate_user(username: str, password: str, session: Session) -> UserInDb:
+def authenticate_user(username: str, password: str, session: Session) -> User:
     user_in_db = get_user_from_db(username, session)
 
     if user_in_db is None:

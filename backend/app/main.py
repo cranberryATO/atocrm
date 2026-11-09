@@ -11,6 +11,7 @@ from app.core.auth import oauth2_scheme
 from app.core.users_router import router as user_router
 from app.core.auth import router as auth_router
 from app.modules.parties.router import router as parties_router
+from app.core.organization import router as orgs_router
 
 
 @asynccontextmanager
@@ -30,6 +31,7 @@ app.include_router(
 
 app.include_router(user_router)
 app.include_router(auth_router, tags=["auth"])
+app.include_router(orgs_router)
 
 
 @app.get("/")

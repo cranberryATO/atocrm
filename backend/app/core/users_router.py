@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException, Response, status
 
 from app.core.database import SessionDep
 from app.core.users_db import (
-    UserInDb,
+    User,
     UserOut,
     UserCreate,
     UserUpdate,
@@ -21,12 +21,12 @@ router = APIRouter(
 
 @router.get("/", response_model=list[UserOut])
 def list_users(session: SessionDep):
-    return list(session.exec(select(UserInDb)).all())
+    return list(session.exec(select(User)).all())
 
 
 @router.post("/", response_model=UserOut, status_code=status.HTTP_201_CREATED)
 def add_user(session: SessionDep, user_create: UserCreate, response: Response):
-    user_in_db = UserInDb(
+    user_in_db = User(
         hashed_password=hash_password(user_create.password),
         username=user_create.username,
     )
@@ -44,7 +44,7 @@ def add_user(session: SessionDep, user_create: UserCreate, response: Response):
 
 @router.get("/{user_id}", response_model=UserOut)
 def read_user(session: SessionDep, user_id: int):
-    user_in_db = session.get(UserInDb, user_id)
+    user_in_db = session.get(User, user_id)
     if not user_in_db:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
     return user_in_db
@@ -52,7 +52,7 @@ def read_user(session: SessionDep, user_id: int):
 
 @router.patch("/{user_id}", response_model=UserOut)
 def modify_user(session: SessionDep, user_id: int, user_patch: UserUpdate):
-    user_in_db = session.get(UserInDb, user_id)
+    user_in_db = session.get(User, user_id)
     if not user_in_db:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
     user_in_db.hashed_password = hash_password(user_patch.password)

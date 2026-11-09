@@ -8,7 +8,7 @@ from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from pydantic import BaseModel, ConfigDict, ValidationError
 from app.core.users_db import (
     authenticate_user,
-    UserInDb,
+    User,
     UserOut,
 )
 from app.core.database import SessionDep
@@ -45,7 +45,7 @@ class TokenPayload(BaseModel):
     # scopes: frozenset[str]
 
 
-def create_access_token(user: UserInDb) -> str:
+def create_access_token(user: User) -> str:
     assert user.id is not None
     payload = TokenPayload(
         sub=str(user.id),
@@ -87,14 +87,14 @@ def get_request_token(token: AuthDep) -> TokenPayload:
 TokenDep = Annotated[TokenPayload, Depends(get_request_token)]
 
 
-def get_current_user(token: TokenDep, session: SessionDep) -> UserInDb:
-    user = session.get(UserInDb, int(token.sub))
+def get_current_user(token: TokenDep, session: SessionDep) -> User:
+    user = session.get(User, int(token.sub))
     if user is None:
         raise credentials_exception
     return user
 
 
-UserDep = Annotated[UserInDb, Depends(get_current_user)]
+UserDep = Annotated[User, Depends(get_current_user)]
 
 
 def require_admin(user: UserDep):
