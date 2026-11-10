@@ -1,11 +1,12 @@
 import pytest
 from fastapi.testclient import TestClient
+from sqlalchemy import Engine
 from sqlalchemy.pool import StaticPool
 from sqlmodel import Session, SQLModel, create_engine
 
 from app.core.database import get_session
 from app.main import app
-from app.core.users_db import create_user_in_db
+from app.core.users_db import create_admin
 
 
 from os import environ
@@ -17,18 +18,28 @@ environ["AUTH_SECRET"] = (
 environ["ADMIN_PASSWORD"] = "admin"
 
 
-# this fixture provides the "client" parameter for all test functions
 @pytest.fixture
-def client():
-    # this creates the DB in memory
+def engine():
     engine = create_engine(
-        "sqlite://",
-        connect_args={"check_same_thread": False},
-        poolclass=StaticPool,
+        "sqlite://", connect_args={"check_same_thread": False}, poolclass=StaticPool
     )
     SQLModel.metadata.create_all(engine)
+    yield engine
+    engine.dispose()
+
+
+@pytest.fixture
+def session(engine: Engine):
     with Session(engine) as session:
-        create_user_in_db("admin", "admin", session, is_admin=True)
+        yield session
+
+
+# this fixture provides the "client" parameter for all test functions
+@pytest.fixture
+def client(engine: Engine):
+
+    with Session(engine) as session:
+        create_admin(session)
 
     # need to override the app dependency that checks the session
     # otherwise it connects to the app database

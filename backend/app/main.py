@@ -2,8 +2,10 @@ from fastapi import FastAPI, Depends
 
 from contextlib import asynccontextmanager
 
+from sqlmodel import Session
 
-from app.core.database import create_db_and_tables
+
+from app.core.database import create_db_and_tables, engine
 from app.core.users_db import create_admin
 from app.core.auth import oauth2_scheme
 
@@ -17,7 +19,8 @@ from app.core.organization import router as orgs_router
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     create_db_and_tables()
-    create_admin()
+    with Session(engine) as session:
+        create_admin(session)
     yield
 
 

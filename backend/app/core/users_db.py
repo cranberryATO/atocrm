@@ -5,7 +5,6 @@ from typing import TYPE_CHECKING
 from sqlmodel import Field, Relationship, SQLModel, Session, select
 from fastapi import HTTPException, status
 
-from app.core.database import engine
 from app.core.settings import get_settings
 
 if TYPE_CHECKING:
@@ -58,15 +57,14 @@ class UserUpdate(SQLModel):
     password: str = Field(min_length=4)
 
 
-def create_admin():
-    with Session(engine) as session:
-        if get_user_from_db(ADMIN_USERNAME, session) is None:
-            create_user_in_db(
-                ADMIN_USERNAME,
-                get_settings().ADMIN_PASSWORD.get_secret_value(),
-                session,
-                is_admin=True,
-            )
+def create_admin(session: Session):
+    if get_user_from_db(ADMIN_USERNAME, session) is None:
+        create_user_in_db(
+            ADMIN_USERNAME,
+            get_settings().ADMIN_PASSWORD.get_secret_value(),
+            session,
+            is_admin=True,
+        )
 
 
 def get_user_from_db(username: str, session: Session) -> User | None:
